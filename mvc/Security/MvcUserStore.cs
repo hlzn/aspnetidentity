@@ -44,14 +44,30 @@ namespace mvc.Security
             return connection;
         }
 
-        public Task<MvcUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
+        public async Task<MvcUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
         {
-            throw new System.NotImplementedException();
+            using(var connection = GetOpenConnection())
+            {
+                return await connection.QueryFirstOrDefaultAsync(
+                    "select * from MvcUser where [Id] = @id",
+                    new{
+                        id = userId
+                    }
+                );
+            }
         }
 
-        public Task<MvcUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+        public async Task<MvcUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
         {
-            throw new System.NotImplementedException();
+            using(var connection = GetOpenConnection())
+            {
+                return await connection.QueryFirstOrDefaultAsync(
+                    "select * from MvcUser where [NormalizedUserName] = @userName",
+                    new{
+                        userName = normalizedUserName
+                    }
+                );
+            }
         }
 
         public Task<string> GetNormalizedUserNameAsync(MvcUser user, CancellationToken cancellationToken)
