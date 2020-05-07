@@ -8,7 +8,7 @@ using Dapper;
 
 namespace mvc.Security
 {
-    public class MvcUserStore : IUserStore<MvcUser>
+    public class MvcUserStore : IUserStore<MvcUser>, IUserPasswordStore<MvcUser>
     {
         public async Task<IdentityResult> CreateAsync(MvcUser user, CancellationToken cancellationToken)
         {
@@ -48,8 +48,8 @@ namespace mvc.Security
         {
             using(var connection = GetOpenConnection())
             {
-                return await connection.QueryFirstOrDefaultAsync(
-                    "select * from MvcUser where [Id] = @id",
+                return await connection.QueryFirstOrDefaultAsync<MvcUser>(
+                    "select * from MvcUsers where [Id] = @id",
                     new{
                         id = userId
                     }
@@ -61,8 +61,8 @@ namespace mvc.Security
         {
             using(var connection = GetOpenConnection())
             {
-                return await connection.QueryFirstOrDefaultAsync(
-                    "select * from MvcUser where [NormalizedUserName] = @userName",
+                return await connection.QueryFirstOrDefaultAsync<MvcUser>(
+                    "select * from MvcUsers where [NormalizedUserName] = @userName",
                     new{
                         userName = normalizedUserName
                     }
@@ -113,6 +113,22 @@ namespace mvc.Security
             }
 
             return IdentityResult.Success;
+        }
+
+        public Task SetPasswordHashAsync(MvcUser user, string passwordHash, CancellationToken cancellationToken)
+        {
+            user.PasswordHash = passwordHash;
+            return Task.CompletedTask;
+        }
+
+        public Task<string> GetPasswordHashAsync(MvcUser user, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(user.PasswordHash);
+        }
+
+        public Task<bool> HasPasswordAsync(MvcUser user, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(user.PasswordHash != null);
         }
     }
 }
