@@ -7,7 +7,7 @@ namespace mvc.Models
     public class MvcUser : IdentityUser
     {
         public string Locale { get; set; } = "en-US";
-        public int OrgId { get; set; }
+        public string OrgId { get; set; }
     }
 
     public class Organization
