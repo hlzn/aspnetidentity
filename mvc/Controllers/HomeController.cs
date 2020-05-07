@@ -16,10 +16,9 @@ namespace mvc.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private UserManager<MvcUser> userManager;
+        private UserManager<IdentityUser> userManager;
 
-        public HomeController(UserManager<MvcUser> userManager)
+        public HomeController(UserManager<IdentityUser> userManager)
         {
             this.userManager = userManager;
         }
@@ -57,7 +56,7 @@ namespace mvc.Controllers
 
                 if (user == null)
                 {
-                    user = new MvcUser
+                    user = new IdentityUser
                     {
                         Id = Guid.NewGuid().ToString(),
                         UserName = model.UserName
