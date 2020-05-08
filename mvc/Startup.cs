@@ -34,9 +34,12 @@ namespace mvc
             var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
             services.AddControllersWithViews();
             services.AddDbContext<MvcUserDbContext>(opt => opt.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationAssembly)));
-            services.AddIdentityCore<MvcUser>(options => { });
+            services.AddIdentity<MvcUser, IdentityRole>(options => { }).AddEntityFrameworkStores<MvcUserDbContext>();
+
             services.AddScoped<IUserStore<MvcUser>, UserOnlyStore<MvcUser, MvcUserDbContext>>();
-            services.AddAuthentication("cookies").AddCookie("cookies", options => options.LoginPath = "/Home/Login");
+            //services.AddAuthentication("cookies").AddCookie("cookies", options => options.LoginPath = "/Home/Login");
+            services.AddScoped<IUserClaimsPrincipalFactory<MvcUser>, MvcUserClaimsPrincipalFactory>();
+            services.ConfigureApplicationCookie(options => options.LoginPath = "/Home/Login");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
