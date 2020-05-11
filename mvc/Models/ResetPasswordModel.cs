@@ -1,18 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace mvc.Models
 {
     public class ResetPasswordModel
     {
-        public ResetPasswordModel()
-        {            
-        }
-
-        public ResetPasswordModel(string token, string email)
-        {
-            Token = token;
-            Email = email;
-        }
-
-        public string Token { get; }
-        public string Email { get; }
+        public string Token { get; set; }
+        public string Email { get; set; }
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+        [Compare("Password")]
+        [DataType(DataType.Password)]
+        public string ConfirmPassword { get; set; }
     }
 }

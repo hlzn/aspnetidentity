@@ -114,7 +114,7 @@ namespace mvc.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ForgotPassword()
+        public IActionResult ForgotPassword()
         {
             return View();
         }
@@ -122,19 +122,49 @@ namespace mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordModel model)
         {
-            
+            if (ModelState.IsValid)
+            {
+                var user = await userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                    var resetUrl = Url.Action("ResetPassword", "Home", new { token = token, email = model.Email }, Request.Scheme);
+                    System.IO.File.WriteAllText("resetLink.txt", resetUrl);
+                } else {
+
+                }
+
+                return View("Success");
+            }
+            return View();
         }
 
         [HttpGet]
-        public async Task<IActionResult> ResetPassword(string token, string email)
+        public IActionResult ResetPassword(string token, string email)
         {
-            return View(new ResetPassworModel(Token = token, Email = email));
+            return View(new ResetPasswordModel() { Token = token, Email = email});
         }
 
         [HttpPost]
         public async Task<IActionResult> ResetPassword(ResetPasswordModel model)
         {
-            
+            if (ModelState.IsValid)
+            {
+                var user = await userManager.FindByEmailAsync(model.Email);
+
+                if (user != null)
+                {
+                    var result = userManager.ResetPasswordAsync(user, model.Token, model.Password);
+                    if (!result.IsCompletedSuccessfully)
+                    {
+                        ModelState.AddModelError("", result.Exception.Message);
+                        return View();
+                    }
+                    return View("Success");
+                }
+                ModelState.AddModelError("", "Invalid Request");
+            }
+            return View();
         }
     }
 }

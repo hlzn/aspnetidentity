@@ -34,11 +34,17 @@ namespace mvc
             var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
             services.AddControllersWithViews();
             services.AddDbContext<MvcUserDbContext>(opt => opt.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationAssembly)));
-            services.AddIdentity<MvcUser, IdentityRole>(options => { }).AddEntityFrameworkStores<MvcUserDbContext>();
+            services.AddIdentity<MvcUser, IdentityRole>(options => { })
+                    .AddEntityFrameworkStores<MvcUserDbContext>()
+                    .AddDefaultTokenProviders();
 
             services.AddScoped<IUserStore<MvcUser>, UserOnlyStore<MvcUser, MvcUserDbContext>>();
             //services.AddAuthentication("cookies").AddCookie("cookies", options => options.LoginPath = "/Home/Login");
             services.AddScoped<IUserClaimsPrincipalFactory<MvcUser>, MvcUserClaimsPrincipalFactory>();
+
+            services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromHours(3));
+
+
             services.ConfigureApplicationCookie(options => options.LoginPath = "/Home/Login");
         }
 
@@ -69,6 +75,9 @@ namespace mvc
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                // endpoints.MapControllerRoute(
+                //     name: "api",
+                //     pattern: "api/{controller}/{action}");
             });
         }
     }
