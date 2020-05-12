@@ -15,6 +15,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using mvc.Models;
 using mvc.Security;
+using ScottBrady91.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
+using mvc.Security.Keys;
 
 namespace mvc
 {
@@ -34,18 +37,50 @@ namespace mvc
             var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
             services.AddControllersWithViews();
             services.AddDbContext<MvcUserDbContext>(opt => opt.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationAssembly)));
-            services.AddIdentity<MvcUser, IdentityRole>(options => { })
+            services.AddIdentity<MvcUser, IdentityRole>(options => {
+                        //options.SignIn.RequireConfirmedEmail = true;
+                        options.Tokens.EmailConfirmationTokenProvider = "emailConfirmation";
+                        options.Password.RequiredLength = 11;
+                        options.User.RequireUniqueEmail = true;
+
+                        options.Lockout.AllowedForNewUsers = true;
+                        options.Lockout.MaxFailedAccessAttempts = 3;
+                        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+                    })
                     .AddEntityFrameworkStores<MvcUserDbContext>()
-                    .AddDefaultTokenProviders();
+                    .AddDefaultTokenProviders()
+                    .AddTokenProvider<EmailConfirmationTokenProvider<MvcUser>>("emailConfirmation")
+                    .AddPasswordValidator<DoesNotContainPasswordValidator<MvcUser>>();
+
+            services.AddScoped<IPasswordHasher<MvcUser>, BCryptPasswordHasher<MvcUser>>();
 
             services.AddScoped<IUserStore<MvcUser>, UserOnlyStore<MvcUser, MvcUserDbContext>>();
             //services.AddAuthentication("cookies").AddCookie("cookies", options => options.LoginPath = "/Home/Login");
             services.AddScoped<IUserClaimsPrincipalFactory<MvcUser>, MvcUserClaimsPrincipalFactory>();
 
             services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromHours(3));
+            services.Configure<EmailConfirmationTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromDays(2));
 
-
+            services.Configure<BCryptPasswordHasherOptions>(options => {
+                options.WorkFactor = 10;
+                options.EnhancedEntropy = false;
+            });
             services.ConfigureApplicationCookie(options => options.LoginPath = "/Home/Login");
+
+            services.AddAuthentication()
+                    .AddGoogle("google", options => {
+                        options.ClientId = ConfigurationManager.AppSetting["GoogleKeys:ClientID"];
+                        options.ClientSecret = ConfigurationManager.AppSetting["GoogleKeys:ClientSecret"];
+                        options.SignInScheme = IdentityConstants.ExternalScheme;
+                    });
+
+            // todo: configure security stamp cookie
+            // services.AddCookie(IdentityConstants.ApplicationScheme, o => {
+            //     o.LoginPath = new PathString("/Account/Login");
+            //     o.Events = new CookieAuthenticationEvents {
+            //         OnValidatePrincipal => SecurityStampValidator.ValidatePrincipalAsync
+            //     };
+            // });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

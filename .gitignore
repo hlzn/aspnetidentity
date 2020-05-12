@@ -1,3 +1,4 @@
 mvc/bin/*
 mvc/obj/*
 mvc/Migrations/*
+mvc/appSettings.Keys.json
